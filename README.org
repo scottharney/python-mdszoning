@@ -1,0 +1,104 @@
+* Python scripts to automate MDS fibre channel zoning
+
+  Fibre channel zoning is a challenge for storage admins and a time sink.  The
+  multidue of objects, lengthy names and WWPNs require
+  standardization. Automation helps reduce the potential for human error.  I
+  use the scripts to help generate and push out zoning changes.
+
+** Requirements
+
+ - Python 2.7+
+ - [[https://github.com/ktbyers/netmiko][NetMiko]] and it's dependencies
+
+** Usage
+
+   The first script generates zoning commands suitable for Cisco MDS switches
+   running NX-OS by examining existing fcalias entries and using pattern
+   matching aginst a provided list of hostnames.  The use case here is a SAN
+   migration to a new target array, in my particular initial case a NetApp
+   cDOT cluster.  This may work on other Cisco NX-OS devices for fiber channel
+   with minimal modifications.  The reliance here is existing fcalias entries
+   that contain server hostnames and therefore can be matched against with
+   case-insenstive regexes.
+
+#+BEGIN_SRC 
+usage: genzonesfromexistingfcaliases.py [-h] --hostname HOSTNAME
+                                        --hosts_filename HOSTS_FILENAME --vsan
+                                        VSAN --zoneset ZONESET
+                                        [--fcalias_filename FCALIAS_FILENAME]
+                                        [--target_fcalias TARGET_FCALIAS]
+                                        [--username USERNAME]
+                                        [--get_from_switch]
+                                        [--password PASSWORD] [--use_keys]
+                                        [--backout] [--key_file KEY_FILE]
+
+Generate zoning commands from input file listing of short hostnames one per
+line. Will match against switch fcalias entries by hostname pattern. print to
+STDOUT. redirect with > filename.txt
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --hostname HOSTNAME   MDS switch fqdn or IP.
+  --hosts_filename HOSTS_FILENAME
+                        list of hosts to match against. one per line
+  --vsan VSAN           VSAN for fcaliases/zones
+  --zoneset ZONESET     zoneset name
+  --fcalias_filename FCALIAS_FILENAME
+                        generated fcaliases output from 'ssh
+                        username@switchname show fcalias >
+                        switch_fcaliases.txt'
+  --target_fcalias TARGET_FCALIAS
+                        optional fcalias name of cDOT cluster on switch.
+                        default ='NAC1'
+  --username USERNAME   optional username to ssh into mds switch. Alternate:
+                        set environment variable MDS_USERNAME. If neither
+                        exists, defaults to current OS username
+  --get_from_switch     get fcaliases directly from switch instead of file.
+                        NOTE: not yet implemented
+  --password PASSWORD   optional password to ssh into mds switch. Alternate:
+                        set environment variable MDS_PASSWORD. If unset
+                        use_keys defaults to True.
+  --use_keys            use ssh keys to log into switch
+  --backout             generate backout commands
+  --key_file KEY_FILE   filename for ssh key file
+#+END_SRC
+
+/note:/ This script currently relies on the ~--fcalias_filename~ argument
+and that the functionality to pull fcalias data directly from the switch is
+not yet implemented as of 2015-12-17.  The output file save via redirection eg.
+~>output_zoning.txt~ could simply be reviewed and cut and pasted into the
+relevant switch. 
+
+#+BEGIN_SRC 
+./dozones.py --help
+usage: dozones.py [-h] --hostname HOSTNAME --filename FILENAME
+                  [--target_fcalias TARGET_FCALIAS] [--username USERNAME]
+                  [--password PASSWORD] [--use_keys] [--dry_run]
+                  [--key_file KEY_FILE] [--activate_zoneset]
+
+push zoning configuration to MDS switch from generated command file. Zoneset
+name and VSAN are derived form the input file.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --hostname HOSTNAME   MDS switch fqdn or IP.
+  --filename FILENAME   Generated file with zoning commands to push to the mds
+                        switch.
+  --target_fcalias TARGET_FCALIAS
+                        optional fcalias name of cDOT cluster on switch.
+                        default ='NAC1'
+  --username USERNAME   optional username to ssh into mds switch. Alternate:
+                        set environment variable MDS_USERNAME. If neither
+                        exists, defaults to current OS username
+  --password PASSWORD   optional password to ssh into mds switch. Alternate:
+                        set environment variable MDS_PASSWORD. If unset
+                        use_keys defaults to True.
+  --use_keys            use ssh keys to log into switch
+  --dry_run             don't do anything. just print some debug output
+  --key_file KEY_FILE   filename for ssh key file
+  --activate_zoneset    add the 'zoneset activate' command to activate the
+                        updated zoneset
+#+END_SRC
+
+validate credentials and data with ~--dry_run~ prior to executing.  It should
+be obvious that this is potentially dangerous.
