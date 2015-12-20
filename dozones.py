@@ -14,6 +14,7 @@ except:
 import argparse
 import os
 import getpass
+import time
 
 # parse command line arguments and optional environment variables
 arguments = argparse.ArgumentParser(
@@ -108,6 +109,14 @@ mds = {
     'use_keys': use_keys
 }
 
+def handle_mds_continue(net_connect, cmd):
+    net_connect.remote_conn.sendall(cmd)
+    time.sleep(1)
+    output = net_connect.remote_conn.recv(65535).decode('utf-8')       
+    if 'want to continue' in output:
+        net_connect.remote_conn.sendall('y\n')
+        output += net_connect.remote_conn.recv(65535).decode('utf-8')
+        return output   
 
 net_connect = ConnectHandler(**mds)
 
@@ -117,18 +126,18 @@ if dry_run :
 
 #uncomment lines below to actually do this
 if not dry_run :
-    #pass # remove this line and uncomment the below lines to enable this
     output = net_connect.send_config_set(commands)
     print output
 else :
     print "DRY RUN: command list = %r" % commands
     
-zoneset_command = ["zoneset activate name %s vsan %s" % (zoneset,vsan)]
-print zoneset_command
-if activate and not dry_run:
-    #pass # remove this line and uncomment the below lines to enable this
-    output = net_connect.send_config_set(zoneset_command)
+zoneset_command = "zoneset activate name %s vsan %s\n" % (zoneset,vsan)
+if activate and not dry_run :
+    net_connect.config_mode()
+    output = handle_mds_continue(net_connect, cmd=zoneset_command)
     print output
+    net_connect.exit_config_mode()
+    net_connect.send_command('copy run start')
 elif dry_run and not activate :
     print "DRY RUN: no activate command"
 else :

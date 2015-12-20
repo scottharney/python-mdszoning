@@ -134,7 +134,7 @@ else :
     print "zoneset name %s vsan %s" % (zoneset, vsan)
     for zone in zones :
         print "no member %s" % zone
-    print "\nzoneset activate name %s vsan %s" % (zoneset, vsan)
+    print "\n"
     for esxfcalias in esxfcaliases :
         print "no zone name %s_%s vsan %s" % (esxfcalias, NAfcalias, vsan)
 
