@@ -26,9 +26,6 @@ arguments.add_argument(
     '--filename', required=True, type=str,
     help='Generated file with zoning commands to push to the mds switch.')
 arguments.add_argument(
-    '--target_fcalias', required=False, type=str,
-    default='NAC1', help='optional fcalias name of cDOT cluster on switch. default =\'NAC1\'')
-arguments.add_argument(
     '--username', required=False, type=str,
     help='optional username to ssh into mds switch. Alternate: set environment variable MDS_USERNAME. If neither exists, defaults to current OS username') 
 arguments.add_argument(
@@ -72,7 +69,6 @@ else :
     
 mds = args.hostname
 zone_commands_filename = args.filename
-NAfcalias = args.target_fcalias
 keyfile = args.key_file
 dry_run = args.dry_run
 
