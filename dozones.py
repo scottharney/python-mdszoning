@@ -76,19 +76,7 @@ if not has_netmiko :
     print "https://github.com/ktbyers/netmiko/tree/master/netmiko"
     exit(1)
 
-# def nonblank_lines(f):
-#     for l in f:
-#         line = l.strip()
-#         if line:
-#             if "zoneset name ZS_" in line : # populating zoneset & vsan based on simple pattern matching. this is a hack.
-#                 global zoneset,vsan
-#                 zoneset_line = line.split()
-#                 zoneset = zoneset_line[2]
-#                 vsan = zoneset_line[4]
-#             yield line
-
 # call nonblank_lines to clean up input and load command set into list variable.
-# function will also populate zoneset and vsan values
 commands = []
 with open(zone_commands_filename) as f_in:
     for line in nonblank_lines(f_in) :
