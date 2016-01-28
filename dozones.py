@@ -87,7 +87,7 @@ with open(zone_commands_filename) as f_in:
         else:
             commands.append(line)
 
-# commend to mds
+# connect to mds
 mds = {
     'device_type': 'cisco_nxos',
     'ip': mds,
@@ -97,14 +97,6 @@ mds = {
     'use_keys': use_keys
 }
 
-# def handle_mds_continue(net_connect, cmd):
-#     net_connect.remote_conn.sendall(cmd)
-#     time.sleep(1)
-#     output = net_connect.remote_conn.recv(65535).decode('utf-8')       
-#     if 'want to continue' in output:
-#         net_connect.remote_conn.sendall('y\n')
-#         output += net_connect.remote_conn.recv(65535).decode('utf-8')
-#         return output   
 
 net_connect = ConnectHandler(**mds)
 

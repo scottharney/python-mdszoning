@@ -9,16 +9,17 @@
 
 
 
-try:
-    from netmiko import ConnectHandler
-    has_netmiko = True
-except:
-    has_netmiko = False
-    
+
+import sys
 import argparse
 import os
 import getpass
 import re
+sys.path.append("./library")
+from na_funcs import *
+from cisco_funcs import *
+debug = False
+
 
 # parse command line arguments and optional environment variables
 
@@ -84,7 +85,7 @@ if args.fcalias_filename and args.get_from_switch :
     print "You can get from the switch directly OR use an input file of fcaliases. pick one."
     exit (1)
     
-mds = args.hostname
+switch_hostname = args.hostname
 hostname_filename = args.hosts_filename
 if args.fcalias_filename:
     fcalias_filename = args.fcalias_filename
@@ -95,18 +96,23 @@ vsan = args.vsan
 zoneset = args.zoneset
 backout = args.backout
 
-if not has_netmiko and args.get_from_switch :
-    print "netmiko is required to use this script to connect to a switch, download installation from:"
-    print "https://github.com/ktbyers/netmiko/tree/master/netmiko or get fcaliases separately"
-    exit(1)
-elif has_netmiko and args.get_from_switch :
-    print "getting fcaliases from switch is not yet implemented."
-    print "get separately and use an input file"
-    exit(1)
-
-
 hostnames = open(hostname_filename, "r").readlines()
-fcaliases = open(fcalias_filename, "r").readlines()
+
+if args.get_from_switch :
+    # connect to mds
+    mds = {
+        'device_type': 'cisco_nxos',
+        'ip': switch_hostname,
+        'verbose': False,
+        'username': username,
+        'password': password,
+        'use_keys': use_keys
+    }
+    net_connect = ConnectHandler(**mds)
+    show_fcaliases = net_connect.send_command("show fcalias")
+    fcaliases = show_fcaliases.splitlines()
+else:
+    fcaliases = open(fcalias_filename, "r").readlines()
 
 esxfcaliases = []
 zones = []
