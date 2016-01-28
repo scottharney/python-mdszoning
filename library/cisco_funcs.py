@@ -49,6 +49,24 @@ def parsefcaliases(cisco_cfg) :
     return(fcalias_dict)
 
 
+def nonblank_lines(f):
+    for l in f:
+        line = l.strip()
+        if line:
+            yield line
+
+
+def handle_mds_continue(net_connect, cmd):
+    net_connect.remote_conn.sendall(cmd)
+    time.sleep(1)
+    output = net_connect.remote_conn.recv(65535).decode('utf-8')       
+    if 'want to continue' in output:
+        net_connect.remote_conn.sendall('y\n')
+        output += net_connect.remote_conn.recv(65535).decode('utf-8')
+        return output   
+
+
+
 def getzones(sh_zones) :
     ''' get a list of zone dictionies and their memberchildren in lists of dictionaries'''
     zones = sh_zones.find_objects(r"zone name")

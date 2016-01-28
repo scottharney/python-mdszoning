@@ -5,16 +5,15 @@
 # requires netmiko from https://github.com/ktbyers/netmiko/tree/master/netmiko
 
 
-try:
-    from netmiko import ConnectHandler
-    has_netmiko = True
-except:
-    has_netmiko = False
-    
+import sys    
 import argparse
 import os
 import getpass
 import time
+sys.path.append("./library")
+from na_funcs import *
+from cisco_funcs import *
+debug = False
 
 # parse command line arguments and optional environment variables
 arguments = argparse.ArgumentParser(
@@ -77,23 +76,28 @@ if not has_netmiko :
     print "https://github.com/ktbyers/netmiko/tree/master/netmiko"
     exit(1)
 
-def nonblank_lines(f):
-    for l in f:
-        line = l.strip()
-        if line:
-            if "zoneset name ZS_" in line : # populating zoneset & vsan based on simple pattern matching. this is a hack.
-                global zoneset,vsan
-                zoneset_line = line.split()
-                zoneset = zoneset_line[2]
-                vsan = zoneset_line[4]
-            yield line
+# def nonblank_lines(f):
+#     for l in f:
+#         line = l.strip()
+#         if line:
+#             if "zoneset name ZS_" in line : # populating zoneset & vsan based on simple pattern matching. this is a hack.
+#                 global zoneset,vsan
+#                 zoneset_line = line.split()
+#                 zoneset = zoneset_line[2]
+#                 vsan = zoneset_line[4]
+#             yield line
 
 # call nonblank_lines to clean up input and load command set into list variable.
 # function will also populate zoneset and vsan values
 commands = []
 with open(zone_commands_filename) as f_in:
     for line in nonblank_lines(f_in) :
-        commands.append(line)
+        if "zoneset name ZS_" in line : # populating zoneset & vsan based on simple pattern matching. this is a hack.
+            zoneset_line = line.split()
+            zoneset = zoneset_line[2]
+            vsan = zoneset_line[4]
+        else:
+            commands.append(line)
 
 # commend to mds
 mds = {
@@ -105,14 +109,14 @@ mds = {
     'use_keys': use_keys
 }
 
-def handle_mds_continue(net_connect, cmd):
-    net_connect.remote_conn.sendall(cmd)
-    time.sleep(1)
-    output = net_connect.remote_conn.recv(65535).decode('utf-8')       
-    if 'want to continue' in output:
-        net_connect.remote_conn.sendall('y\n')
-        output += net_connect.remote_conn.recv(65535).decode('utf-8')
-        return output   
+# def handle_mds_continue(net_connect, cmd):
+#     net_connect.remote_conn.sendall(cmd)
+#     time.sleep(1)
+#     output = net_connect.remote_conn.recv(65535).decode('utf-8')       
+#     if 'want to continue' in output:
+#         net_connect.remote_conn.sendall('y\n')
+#         output += net_connect.remote_conn.recv(65535).decode('utf-8')
+#         return output   
 
 net_connect = ConnectHandler(**mds)
 
