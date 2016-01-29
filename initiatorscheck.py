@@ -86,7 +86,8 @@ if (xo.results_status() == "failed") :
     print (xo.sprintf())
     sys.exit (1)
 
-#print xo.sprintf() #debugging
+if debug :
+    print xo.sprintf() #debugging
 
 initiators_list = []
 
