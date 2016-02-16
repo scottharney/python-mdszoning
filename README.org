@@ -9,6 +9,7 @@
 
  - Python 2.7+
  - [[https://github.com/ktbyers/netmiko][NetMiko]] and it's dependencies
+ - [[https://github.com/mpenning/ciscoconfparse][CiscoConfParse]]  and it's dependencies
 
 ** Usage
 
@@ -102,3 +103,12 @@ optional arguments:
 
 validate credentials and data with ~--dry_run~ prior to executing.  It should
 be obvious that this is potentially dangerous.
+
+- ~checkwwpnigroupfcaliases.py~ 
+- ~initiatorscheck.py~ These scripts perform checks that zoning items are as
+  expected. Note that they also require the NetApp Manageability SDK which is
+  for now behind support.netapp.com and requires a netapp login.  The first
+  script is a comparison of NetApp igroup member WWPNs and fcaliases on the
+  switch.  It's a post-check for some of the work here.  The second script is
+  just a sanity check against a filer only for initiators that are logged in
+  (zoned) but have no igroup membership.   
