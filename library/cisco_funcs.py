@@ -3,6 +3,7 @@
 # helper functions for mds switches
 # uses netmiko and ciscoconfparse
 
+import re
 
 try:
     from netmiko import ConnectHandler
@@ -24,7 +25,6 @@ if not has_ciscoconfparse :
     print "The ciscoconfparse module is needed. Download "
     print "installation from: https://github.com/mpenning/ciscoconfparse"
     exit(1)
-
 
 def parsefcaliases(cisco_cfg) :
     """ parse fcalias data from cisco show running-config into list of dictionaries """
@@ -48,13 +48,11 @@ def parsefcaliases(cisco_cfg) :
 
     return(fcalias_dict)
 
-
 def nonblank_lines(f):
     for l in f:
         line = l.strip()
         if line:
             yield line
-
 
 def handle_mds_continue(net_connect, cmd):
     net_connect.remote_conn.sendall(cmd)
@@ -63,9 +61,7 @@ def handle_mds_continue(net_connect, cmd):
     if 'want to continue' in output:
         net_connect.remote_conn.sendall('y\n')
         output += net_connect.remote_conn.recv(65535).decode('utf-8')
-        return output   
-
-
+        return output
 
 def getzones(sh_zones) :
     ''' get a list of zone dictionies and their memberchildren in lists of dictionaries'''
@@ -98,5 +94,32 @@ def getzones(sh_zones) :
         zones_list.append(zone_list)
             
     return(zones_list)
-            
 
+def zone_exists(mds, zone_name, vsan_id):
+    """Check if a specifc zone name exists on MDS switch opening a connection with MDS switch
+    and execute \"show zoneset brief\" commands receiving vsan id as a param  """
+
+    # Instantiate a netmiko connection with MDS and,
+    # if anything goes wrong a wxception will raise
+    try:
+        mds = ConnectHandler(**mds)
+    except Exception, e:
+        raise e
+
+    # Receive VSAN ID param and define the zoneset command,
+    # send to MDS, store the result into a variable
+    command = 'show zoneset brief vsan %s' % vsan_id
+    zoneset_brief = mds.send_command(command)
+
+    # Close the connection after execute command
+    mds.disconnect()
+    
+    # Compile a regex with the received zone name
+    # make a search into the zoneset resukt variable,
+    # return True if the zone name was found or False if doesn't
+    regex = re.compile(zone_name)
+    
+    if regex.search(zoneset_brief):
+        return True
+    else:
+        return False
