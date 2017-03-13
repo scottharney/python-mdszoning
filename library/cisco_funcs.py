@@ -183,3 +183,30 @@ def count_smartzone_members(mds, zone_name):
             members += 1
 
     return members
+
+def device_alias_exists(mds, pwwn):
+    """ Count the total members existent on a specifc smartzone, including initiator and target members """
+
+    # Instantiate a netmiko connection with MDS and,
+    # if anything goes wrong a wxception will raise
+    try:
+        conn = ConnectHandler(**mds)
+    except Exception, e:
+        raise e
+
+    # Receive zone name as a param and define the command to be
+    # send to MDS, store the result into a variable
+    command = 'show device-alias database'
+    device_alias_db = conn.send_command(command)
+
+    # Close the connection after execute command
+    conn.disconnect()
+    
+    # Compile a regex with the received zone name
+    # make a search into the zone result variable,
+    # and count the total number of matches
+    regex = re.compile('device-alias\sname\s(.*)pwwn\s(%s)' % pwwn)
+
+    for device_alias in device_alias_db.split('\n'):
+        if regex.search(device_alias):
+            return device_alias.split()[2]

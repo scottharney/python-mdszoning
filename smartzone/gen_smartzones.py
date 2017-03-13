@@ -3,6 +3,7 @@
 
 import os
 import sys
+import time
 import getpass
 sys.path.append("./library")
 import argparse
@@ -11,9 +12,10 @@ from utils import *
 from na_funcs import *
 from cisco_funcs import *
 
-def check_on_switch(mds, zoneset, zones, vsan, fabric, switch):
+def check_on_switch(mds, zoneset, pwwns, zones, vsan, fabric, switch):
 
     non_existent_zones = []
+    alias_exists = {}
     zoneset_existent = False
 
     # http://www.cisco.com/c/en/us/td/docs/switches/datacenter/mds9000/sw/6_2/configuration/guides/config_limits/b_mds_9000_configuration_limits_6_2.html
@@ -26,6 +28,12 @@ def check_on_switch(mds, zoneset, zones, vsan, fabric, switch):
     if zoneset_exists(mds, zoneset, vsan) is not False:
         zoneset_existent = True
 
+    for pwwn in pwwns:
+        print bcolors.BOLD + "Validating if device-alias exists with pwwn %s on MDS..." % pwwn + bcolors.ENDC
+        alias = device_alias_exists(mds, pwwn)
+        if alias:
+            alias_exists[pwwn] = alias
+
     for zone_name in zones.keys():
         if len(zone_name) > 1:
             print bcolors.BOLD + "Validating %s on MDS..." % zone_name.strip() + bcolors.ENDC
@@ -34,6 +42,13 @@ def check_on_switch(mds, zoneset, zones, vsan, fabric, switch):
 
         print bcolors.BOLD + "Validating number of members of %s on MDS..." % zone_name.strip() + bcolors.ENDC
         members = count_smartzone_members(mds, zone_name)
+
+    if alias_exists:
+        print bcolors.OKBLUE + "\n### INFO! Some device-alias already exists ... ###\n" + bcolors.ENDC
+        for pwwn, alias in alias_exists.iteritems():
+            print bcolors.BOLD + "device-alias %s already exists for %s" % (alias, pwwn) + bcolors.ENDC
+
+        raw_input('\nPress ' + bcolors.BOLD + '[enter]' + bcolors.ENDC + ' to continue ...')
 
     if zoneset_existent is False or len(non_existent_zones) > 0 or members >= smartzone_members_limit:
         print bcolors.WARNING + "\n### ATENTION! Validation found some errors ... ###\n" + bcolors.ENDC
@@ -65,6 +80,10 @@ def generate_smartzones(config_file, zoneset, vsan, fabric, switch=None, check=F
         exit(1)
 
     hosts_per_zone = {}
+    pwwns = []
+
+    for host in config.sections():
+        pwwns.append(config.get(host, fabric))
 
     for host in config.sections():
         for zone in config.get(host, 'zones').split(','):
@@ -75,12 +94,13 @@ def generate_smartzones(config_file, zoneset, vsan, fabric, switch=None, check=F
             hosts_per_zone[zone].append(host)
 
     if check:
-        check_on_switch(mds, zoneset, hosts_per_zone, vsan, fabric, switch)
+        check_on_switch(mds, zoneset, pwwns, hosts_per_zone, vsan, fabric, switch)
     else:
         if switch:
             print bcolors.OKGREEN + "\nGenerating commands to switch %s ... \n" % switch + bcolors.ENDC
         else:
             print bcolors.OKGREEN + "\nGenerating commands to FABRIC %s ... \n" % fabric + bcolors.ENDC
+        time.sleep(3)
         print "config t"
         print "device-alias database"
         for host in config.sections():
