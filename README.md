@@ -4,7 +4,7 @@
   automation helps reduce the potential for human error. This scripts will help 
   generate and push out zoning changes.
 
-  > **IMPORTANTE**: The multidue of objects, lengthy names and WWPNs require standardization.
+  > **IMPORTANT**: The multidue of objects, lengthy names and WWPNs require standardization.
 
 ## Requirements
 
