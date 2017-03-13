@@ -32,8 +32,8 @@ def check_on_switch(mds, zoneset, zones, vsan, fabric, switch):
             if zone_exists(mds, zone_name, vsan) is False:
                 non_existent_zones.append(zone_name)
 
-    print bcolors.BOLD + "Validating number of members of %s on MDS..." % zone_name.strip() + bcolors.ENDC
-    members = count_smartzone_members(mds, zone_name)
+        print bcolors.BOLD + "Validating number of members of %s on MDS..." % zone_name.strip() + bcolors.ENDC
+        members = count_smartzone_members(mds, zone_name)
 
     if zoneset_existent is False or len(non_existent_zones) > 0 or members >= smartzone_members_limit:
         print bcolors.WARNING + "\n### ATENTION! Validation found some errors ... ###\n" + bcolors.ENDC
