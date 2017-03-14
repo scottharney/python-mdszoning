@@ -4,7 +4,7 @@
 # uses netapp managability sdk
 
 import sys
-sys.path.append("/home/sharney/source/netapp-manageability-sdk-5.2.2/lib/python/NetApp")
+sys.path.append("../NetApp/netapp-manageability-sdk-5.6/lib/python/NetApp/")
 try:
     from NaServer import *
     has_nasdk = True
@@ -16,9 +16,7 @@ if not has_nasdk :
     print "NetApp managability SDK 5.2 or higher is required to use this script. download"
     print "installation from: https://support.netapp.com"
     exit(1)
-    
 
-    
 def cdotconnect(filer, username, password) :
     """ return a filer connection handle """
     s = NaServer(filer, 1 , 31)
@@ -28,7 +26,6 @@ def cdotconnect(filer, username, password) :
     s.set_style("LOGIN")
     s.set_admin_user(username, password)
     return s
-
 
 def getigroupwwpns(igroupname, filerconnection) :
     """ given an igroup name and connection handle, return normalized
@@ -48,7 +45,7 @@ def getigroupwwpns(igroupname, filerconnection) :
         print ("Error:\n")
         print (xo.sprintf())
         sys.exit (1)
-        
+
     attributes = xo.child_get("attributes-list")
     initiator_group_info = attributes.child_get("initiator-group-info")
     initiators = initiator_group_info.child_get("initiators").children_get()
@@ -59,8 +56,6 @@ def getigroupwwpns(igroupname, filerconnection) :
         items.append(item) 
         
     return items
-
-
 
 def getigrouplist(NaElement) :
     ''' return a list of igroup dictionaries'''
@@ -74,8 +69,7 @@ def getigrouplist(NaElement) :
         igroup_list.append(initiator_dict)
 
     return (igroup_list)
-            
-            
+
 def getfcpconnectedinitiators(NaElement) :
     ''' return a list of connected fcp initiators'''
 
@@ -92,7 +86,6 @@ def getfcpconnectedinitiators(NaElement) :
         connected_initiators_list.append(initiator_dict)
         
     return (connected_initiators_list)
-
 
 def getfcpinitiators(NaElement) :
     ''' return a list of dicts containing connected fcp initiator information '''

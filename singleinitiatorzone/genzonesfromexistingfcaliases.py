@@ -7,9 +7,6 @@
 # also be provided one per line in a file.
 # populate relevant variables below
 
-
-
-
 import sys
 import argparse
 import os
@@ -18,8 +15,7 @@ import re
 sys.path.append("./library")
 from na_funcs import *
 from cisco_funcs import *
-debug = False
-
+debug = True
 
 # parse command line arguments and optional environment variables
 
@@ -38,7 +34,7 @@ arguments.add_argument(
     '--zoneset', required=True, type=str,
     help='zoneset name')
 arguments.add_argument(
-    '--fcalias_filename', required=False, type=str,
+    '--fcalias_filename', required=True, type=str,
     help='generated fcaliases output from \'ssh username@switchname show fcalias > switch_fcaliases.txt\'')
 arguments.add_argument(
     '--target_fcalias', required=False, type=str,
@@ -120,7 +116,7 @@ for host in hostnames :
     hostpattern = ".*%s.*" % host.strip()
     checkhost = re.compile(hostpattern, re.IGNORECASE)
     for fcalias in fcaliases:
-        if checkhost.search(fcalias) :
+        if checkhost.search(fcalias):
             esxhost = fcalias.split()
             esxfcaliases.append(esxhost[2])
             zones.append("%s_%s" % (esxhost[2], NAfcalias))

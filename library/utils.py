@@ -3,8 +3,6 @@
 # General utilities functions
 
 class bcolors:
-	""" Print a terminal output colored text by using ANSI escape sequences """
-
     OKGREEN = '\033[92m' # Green
     WARNING = '\033[93m' # Yellow
     FAIL = '\033[91m' # Red
